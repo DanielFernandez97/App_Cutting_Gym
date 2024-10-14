@@ -139,5 +139,5 @@ def auxilia_consultas(columna, fecha):
 
 
    
-if __name__ == '__main__':
-    creacion_tabla()
+"""if __name__ == '__main__':
+    creacion_tabla()"""

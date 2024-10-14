@@ -1,24 +1,22 @@
 from tkinter import ttk
 from tkinter import *
 
+import os
+
 
 import sqlite3 as sql
 import AppDefi_SQL as app
 from AppDefi_SQL import *
 
-import AppDefi_Base as app_B
-from AppDefi_Base import *
-
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 #Incluir dos pack mas donde se vean las respuestas de la consola y otra donde esten los graficos.
-
+TABLA = 'Tabla_Definicion.db'
 
 class Pesos:
 
     def __init__(self,root):
-        base = 'Tabla_Definicion.db'
 
         self.wind = root
         self.wind.title('App Definicion 2024')
@@ -174,10 +172,18 @@ class Pesos:
     def agregar(self):
             if self.chequeo:
                 fecha = self.ent1.get()
-                #Meter un if por si mete las fecha con "/"
-                fecha_reg_anterior = lectura_filas()[-1][0]
-                peso = float(self.ent2.get())
-                peso_ayer = float(app.auxilia_consultas('Peso',fecha_reg_anterior)[0][0])
+                try:
+                    fecha = fecha.replace("/", "-")
+                except:
+                    pass
+                if lectura_filas() == []:
+                    fecha_reg_anterior = "NULL"
+                    peso = float(self.ent2.get()) 
+                    peso_ayer = 0
+                else:
+                    fecha_reg_anterior = lectura_filas()[-1][0]
+                    peso = float(self.ent2.get())
+                    peso_ayer = float(app.auxilia_consultas('Peso',fecha_reg_anterior)[0][0])
                 estatura = int(170)
                 MET_gym = float(6)
                 MET_cardio = float(3.5)
@@ -218,6 +224,11 @@ class Pesos:
 
 
 if __name__ == '__main__':
+    if os.path.exists(TABLA) == False:
+        creacion_tabla()
+        print(f"Se genero la tabla de datos en tu carpeta actual --> {os.getcwd()}")
+    else:
+        pass 
     root = Tk()
     pesos = Pesos(root)
     root.mainloop()
