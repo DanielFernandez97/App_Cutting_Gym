@@ -1,5 +1,8 @@
 from tkinter import ttk
 from tkinter import *
+from tkinter import Text
+
+
 
 import os
 
@@ -12,6 +15,16 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 #Incluir dos pack mas donde se vean las respuestas de la consola y otra donde esten los graficos.
+#TODO
+#Boton de actualizar actualmente sin uso, tengo que implementarlo
+#Generar una lista con user: y chatbot:
+#Añadir el grafico para diferentes medidas, peso, evolucion de las calorias y demas
+
+#Futuros desarrollos
+#Incluir fotografia y comentario con IA sobre la evolucion del fisico, se necesitaran labelframe mas, necesitariamos dataset con los label
+#Incluir un chatbot de un modelo desde 0 donde el usuario pueda preguntar cosas sobre el gym puede ser modelo fine tuned con info gym
+
+
 TABLA = 'Tabla_Definicion.db'
 
 class Pesos:
@@ -20,21 +33,29 @@ class Pesos:
 
         self.wind = root
         self.wind.title('App Definicion 2024')
-        self.wind.attributes("-fullscreen", True)
+        self.wind.geometry("1750x1150")
 
         frame1 = LabelFrame(self.wind, text='Datos Pesos por fecha', font=("Helvetica", 14)) 
 
         frame2 = LabelFrame(self.wind, text='Filtrado para los pesos', font=("Helvetica", 14))
 
         frame3 = LabelFrame(self.wind, text='Graficado', font=("Helvetica", 14))
+        self.frame3 = frame3
 
-        frame1.pack(fill='both', expand='no',padx=30,pady=20, side=TOP)
-        frame2.pack(fill='x', expand='no', side=LEFT)
-        frame3.pack(fill='both', expand='yes',padx=20,pady=10,side=BOTTOM)
+        frame4 = LabelFrame(self.wind, text='Preguntas Chatbot', font=("Helvetica", 14))
 
+
+        #Voy a tener que cambiar la estructura y no hacerlo con pack sino con grid() o place() que es mucho mas versatil
+        #frame1.pack(fill='both', expand='no',padx=30,pady=20, side=TOP)
+        #frame2.pack(fill='x', expand='no', side=LEFT)
+        #frame3.pack(fill='both', expand='yes',padx=20,pady=10,side=BOTTOM)
+        frame1.place(x=100,y=10, width=1600)
+        frame2.place(x=100, y=280, width=750)
+        frame3.place(x=900, y=280, width=800, height=793)
+        frame4.place(x=100, y=600, width=750)
 
         self.trv = ttk.Treeview(frame1, columns= (1,2,3,4,5,6,7,8,9,10,11), show='headings', height=10)
-        self.trv.pack()
+        self.trv.grid()
 
         #Importante, hay que intentar que al tirar una query solo muestre las columnas de la query
         columnas = app.nombre_columnas()
@@ -46,6 +67,10 @@ class Pesos:
                 anchura = 110
             self.trv.column(numero+1, width=anchura)
         self.consulta()
+
+        self.text = Text(frame4, background="white", width=140, height=25)
+        self.text.config(state="disable")
+        self.text.grid()
 
 
         lbl1 = Label(frame2, text='Fecha del peso', width= 20)
@@ -110,6 +135,20 @@ class Pesos:
 
         btt5 = Button(master=frame3,text="cerrar",bg="red",command=self.cerrar, width=10, height=3, font=15)
         btt5.pack(side="bottom")
+
+        btt6 = Button(master=frame3,text="Actualizar",command=self.actualizar_grafico, width=12, height=2)
+        btt6.pack(side="top")
+
+
+        self.ent7 = Entry(frame4)
+        self.ent7.place(x=10, y=415, width=420)
+        btt7 = Button(master=frame4,text="Insertar texto", command=self.insert_text, width=15, height=2)
+        btt7.grid()
+
+        self.graficar()
+    
+
+    def graficar(self):
             
         datos = lectura_filas()
         num_regis = len(datos.copy())
@@ -132,10 +171,20 @@ class Pesos:
         ax.set_xlabel("Fecha")
         ax.set_ylabel("Pesaje")
 
-        canvas = FigureCanvasTkAgg(fig, master=frame3)
+        canvas = FigureCanvasTkAgg(fig, master=self.frame3)
         canvas.draw()
 
         canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        self.canvas = canvas
+
+    def actualizar_grafico(self):
+        self.canvas.get_tk_widget().destroy()
+        self.graficar()
+
+    def insert_text(self):
+        self.text.insert(self.ent7.get())
+
 
     def cerrar(self):
         root.quit()
