@@ -18,7 +18,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 #TODO
 #Boton de actualizar actualmente sin uso, tengo que implementarlo
 #Generar una lista con user: y chatbot:
-#Añadir el grafico para diferentes medidas, peso, evolucion de las calorias y demas
+#Añadir el grafico para diferentes medidas, peso, evolucion de las calorias y demas, igual lista desplegada o algo, echar un ojo al flujo de graficar
 
 #Futuros desarrollos
 #Incluir fotografia y comentario con IA sobre la evolucion del fisico, se necesitaran labelframe mas, necesitariamos dataset con los label
@@ -26,6 +26,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 TABLA = 'Tabla_Definicion.db'
+DIALOGUE_LIST = []
 
 class Pesos:
 
@@ -69,7 +70,7 @@ class Pesos:
         self.consulta()
 
         self.text = Text(frame4, background="white", width=140, height=25)
-        self.text.config(state="disable")
+        self.text.config(state="normal")
         self.text.grid()
 
 
@@ -136,40 +137,46 @@ class Pesos:
         btt5 = Button(master=frame3,text="cerrar",bg="red",command=self.cerrar, width=10, height=3, font=15)
         btt5.pack(side="bottom")
 
-        btt6 = Button(master=frame3,text="Actualizar",command=self.actualizar_grafico, width=12, height=2)
-        btt6.pack(side="top")
+        self.drop_list = ttk.Combobox(frame3, values=["Calorias", "Peso", "Tiempos Entreno"], state="readonly")
+        self.drop_list.set("Selecciona la medida a graficar")
+        self.drop_list.pack(side=TOP,expand=YES, fill="x")
+
+        btt6 = Button(master=frame3,text="Actualizar Grafico",command=self.actualizar_grafico, width=12, height=2)
+        btt6.pack(side=TOP,expand=YES, fill="x")
 
 
         self.ent7 = Entry(frame4)
-        self.ent7.place(x=10, y=415, width=420)
-        btt7 = Button(master=frame4,text="Insertar texto", command=self.insert_text, width=15, height=2)
-        btt7.grid()
+        self.ent7.place(x=10, y=415, width=460)
+        btt8 = Button(master=frame4,text="Insertar texto", command=self.chatbot_dialogue, width=15, height=2)
+        btt8.grid()
 
         self.graficar()
-    
 
+    def get_selection(self):
+        selection = self.drop_list.get()
+        return selection
+  
     def graficar(self):
             
         datos = lectura_filas()
         num_regis = len(datos.copy())
-        lista_pesos = []
-        lista_fechas = []
+        lista_x = []
+        lista_y = []
 
         for index in range(num_regis):
-            fecha = datos[index][0]
-            peso = datos[index][1]
-            lista_fechas.append(fecha)
-            lista_pesos.append(peso)
+            y = datos[index][0]
+            x = datos[index][1] 
+            lista_y.append(y)
+            lista_x.append(x)
         
-        lista_fechas.reverse()
-        lista_pesos.reverse()
+        lista_y.reverse()
+        lista_x.reverse()
 
         fig, ax = plt.subplots()
-        ax.plot(lista_fechas, lista_pesos, marker='o')
-
-        ax.set_title("Evolutivo pesos por fecha")
+        ax.plot(lista_y, lista_x, marker='o')
+        ax.set_title(f"Evolutivo Peso por fecha")
         ax.set_xlabel("Fecha")
-        ax.set_ylabel("Pesaje")
+        ax.set_ylabel(f"Peso")           
 
         canvas = FigureCanvasTkAgg(fig, master=self.frame3)
         canvas.draw()
@@ -180,10 +187,59 @@ class Pesos:
 
     def actualizar_grafico(self):
         self.canvas.get_tk_widget().destroy()
-        self.graficar()
+        try: 
+            self.label_text.destroy()
+        except: 
+            pass
+        
 
-    def insert_text(self):
-        self.text.insert(self.ent7.get())
+        datos = lectura_filas()
+        num_regis = len(datos.copy())
+        lista_x = []
+        lista_y = []
+
+        for index in range(num_regis):
+            y = datos[index][0] 
+            if self.get_selection().lower() == "peso":
+                x = datos[index][1]
+            elif self.get_selection().lower() == "calorias":
+                x = datos[index][9]
+            elif self.get_selection().lower() == "tiempos entreno":
+                x = datos[index][10]
+            else: 
+                #Imprimir un texto por pantalla para que el usuario vea que no eligio la medida a graficar
+                text = "Error en la eleccion de la medida a graficar, selecciona la medida y actualiza el grafico"
+                self.label_text = ttk.Label(self.frame3, text=text, font=25, justify="center")
+                self.label_text.pack()
+                return ""
+            lista_y.append(y)
+            lista_x.append(x)
+        
+        lista_y.reverse()
+        lista_x.reverse()
+
+        fig, ax = plt.subplots()
+        ax.plot(lista_y, lista_x, marker='o')
+
+        ax.set_title(f"Evolutivo {self.drop_list.selection_get()} por fecha")
+        ax.set_xlabel("Fecha")
+        ax.set_ylabel(f"{self.drop_list.selection_get().lower()}")       
+
+        canvas = FigureCanvasTkAgg(fig, master=self.frame3)
+        canvas.draw()
+
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        self.canvas = canvas
+
+    def chatbot_dialogue(self):
+        
+        user_question = str("User: ") + self.ent7.get() + "\n" 
+        self.text.insert(INSERT, user_question)
+        DIALOGUE_LIST.append(self.ent7.get())
+        self.ent7.delete(0, END)
+        chatbot_response = str("Chatbot: ") + "Respuesta provisional" + "\n"
+        self.text.insert(INSERT, chatbot_response)
 
 
     def cerrar(self):
@@ -280,6 +336,7 @@ if __name__ == '__main__':
         pass 
     root = Tk()
     pesos = Pesos(root)
+
     root.mainloop()
     
 
