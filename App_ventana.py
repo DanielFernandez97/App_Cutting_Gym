@@ -137,7 +137,7 @@ class Pesos:
         btt5 = Button(master=frame3,text="cerrar",bg="red",command=self.cerrar, width=10, height=3, font=15)
         btt5.pack(side="bottom")
 
-        self.drop_list = ttk.Combobox(frame3, values=["Calorias", "Peso", "Tiempos Entreno"], state="readonly")
+        self.drop_list = ttk.Combobox(frame3, values=["Calorias Cardio", "Peso", "Calorias quemadas Totales"], state="readonly")
         self.drop_list.set("Selecciona la medida a graficar")
         self.drop_list.pack(side=TOP,expand=YES, fill="x")
 
@@ -202,9 +202,9 @@ class Pesos:
             y = datos[index][0] 
             if self.get_selection().lower() == "peso":
                 x = datos[index][1]
-            elif self.get_selection().lower() == "calorias":
+            elif self.get_selection().lower() == "calorias cardio":
                 x = datos[index][9]
-            elif self.get_selection().lower() == "tiempos entreno":
+            elif self.get_selection().lower() == "calorias quemadas totales":
                 x = datos[index][10]
             else: 
                 #Imprimir un texto por pantalla para que el usuario vea que no eligio la medida a graficar
