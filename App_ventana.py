@@ -2,7 +2,7 @@ from tkinter import ttk
 from tkinter import *
 from tkinter import Text
 
-
+from chatbot_gym import *
 
 import os
 
@@ -17,8 +17,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 #Incluir dos pack mas donde se vean las respuestas de la consola y otra donde esten los graficos.
 #TODO
 #Boton de actualizar actualmente sin uso, tengo que implementarlo
-#Generar una lista con user: y chatbot:
-#Añadir el grafico para diferentes medidas, peso, evolucion de las calorias y demas, igual lista desplegada o algo, echar un ojo al flujo de graficar
+# Mejorar el modelo de texto con mas cantidad de texto para aprender y fine tunearlo con preguntas y respuestas
+# Esconder las rutas constantes en de alguna manera
 
 #Futuros desarrollos
 #Incluir fotografia y comentario con IA sobre la evolucion del fisico, se necesitaran labelframe mas, necesitariamos dataset con los label
@@ -237,8 +237,13 @@ class Pesos:
         user_question = str("User: ") + self.ent7.get() + "\n" 
         self.text.insert(INSERT, user_question)
         DIALOGUE_LIST.append(self.ent7.get())
+        input = self.ent7.get()
+        print(input)
         self.ent7.delete(0, END)
-        chatbot_response = str("Chatbot: ") + "Respuesta provisional" + "\n"
+        response = model_LLM_response(input=input)
+        cleaned_response = response.split(input.split()[-1],1)[1].lstrip().capitalize()
+        chatbot_response = str("Chatbot: ") + cleaned_response + "\n" 
+
         self.text.insert(INSERT, chatbot_response)
 
 
