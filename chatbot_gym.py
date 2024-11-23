@@ -12,11 +12,7 @@ from openpyxl import load_workbook
 from sklearn.feature_extraction.text import TfidfVectorizer
 from dotenv import load_dotenv
 
-#TODO
-# Cambiar nombres de las funciones para adaptarlo a mi codigo
-# Mejorar el feature engineering en el procesado de textos
-# Quitar la importancia de las palabras que se repiten las stopwords
-# Para mejorar las predicciones del modelo lo mas importante es el numero de textos con los que es entrenado
+
 load_dotenv()
 
 FILE_PATH = os.getenv("FILE_PATH")
@@ -182,7 +178,7 @@ class CharRNNDataset(torch.utils.data.Dataset):
 
 
 class CharRNN(torch.nn.Module):
-    def __init__(self, input_size, embedding_size=128, hidden_size=256, num_layers=3, dropout=0.2):
+    def __init__(self, input_size, embedding_size=256, hidden_size=512, num_layers=2, dropout=0.2):
         self.text_output = f"Parametros para este modelo: embedding_size = {embedding_size}, hidden_size = {hidden_size}, num_layers = {num_layers}, dropout = {dropout}"
         super().__init__()
         self.encoder = torch.nn.Embedding(input_size, embedding_size)
@@ -326,7 +322,7 @@ def model_LLM_response(input):
 
     return input 
 
-
+"""
 if __name__ == "__main__":
 
 
@@ -348,7 +344,7 @@ if __name__ == "__main__":
     excel_results_registration(X_new, prediccion=True)
     print(X_new)
 
-"""
+
     for i in range(30):
     #Se puede añadir un parametros de temperatura para elegir entre las palabras con mayor probabildad aleatoriamente
         X_new_encoded = tokenizer.text_to_seq(X_new)

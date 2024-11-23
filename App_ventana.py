@@ -14,15 +14,7 @@ from AppDefi_SQL import *
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-#Incluir dos pack mas donde se vean las respuestas de la consola y otra donde esten los graficos.
-#TODO
-#Boton de actualizar actualmente sin uso, tengo que implementarlo
-# Mejorar el modelo de texto con mas cantidad de texto para aprender y fine tunearlo con preguntas y respuestas
-# Esconder las rutas constantes en de alguna manera
 
-#Futuros desarrollos
-#Incluir fotografia y comentario con IA sobre la evolucion del fisico, se necesitaran labelframe mas, necesitariamos dataset con los label
-#Incluir un chatbot de un modelo desde 0 donde el usuario pueda preguntar cosas sobre el gym puede ser modelo fine tuned con info gym
 
 
 TABLA = 'Tabla_Definicion.db'
