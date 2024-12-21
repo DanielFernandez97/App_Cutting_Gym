@@ -13,7 +13,17 @@ def creacion_database():
     conexion.commit()
     conexion.close()
 
-def creacion_tabla():
+def filter_query_read(initial_date):
+    conexion = sql.connect('Cutting_table.db')
+    cursor = conexion.cursor()
+    instruccion = f'SELECT * FROM weight_control WHERE date >= "{initial_date}" ORDER BY Date DESC'
+    cursor.execute(instruccion)
+    datos = cursor.fetchall()
+    conexion.commit()
+    conexion.close()
+    return datos
+
+def create_table():
     conexion = sql.connect('Cutting_table.db')
     cursor = conexion.cursor()
     cursor.execute("""CREATE TABLE weight_control(
@@ -61,7 +71,7 @@ def borrar_fila(condicion_fecha):
     conexion.commit()
     conexion.close()
 
-def lectura_filas():
+def read_records():
     conexion = sql.connect('Cutting_table.db')
     cursor = conexion.cursor()
     instruccion = 'SELECT * FROM weight_control ORDER BY Date DESC'
@@ -107,7 +117,7 @@ def filtrado_tabla():
     conexion.close()
     print(datos)
 
-def nombre_columnas():
+def columns_names():
     conexion = sql.connect('Cutting_table.db')
     cursor = conexion.cursor()
     instruccion = 'SELECT name FROM pragma_table_info("weight_control")'
@@ -117,7 +127,7 @@ def nombre_columnas():
     conexion.close()
     return columnas
 
-def lanza_querys(query):
+def throw_querys(query):
     conexion = sql.connect('Cutting_table.db')
     cursor = conexion.cursor()
     instruccion = query
@@ -127,7 +137,7 @@ def lanza_querys(query):
     conexion.close()
     return datos
 
-def auxilia_consultas(columna, fecha):
+def querys_helps(columna, fecha):
     conexion = sql.connect('Cutting_table.db')
     cursor = conexion.cursor()
     instruccion = f'SELECT {columna} FROM weight_control WHERE Date = "{fecha}"'

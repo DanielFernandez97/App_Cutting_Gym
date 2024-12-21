@@ -42,13 +42,29 @@ def response_generation(context, input_sentence):
     start_index = torch.argmax(start_scores)
     end_index = torch.argmax(end_scores)
 
-    padding = 25  
+    padding = 15  
     start_index = max(0, start_index)  
     end_index = min(len(inputs.input_ids[0]) - 1, end_index + padding)  
 
     
     answer = tokenizer.decode(inputs.input_ids[0][start_index : end_index + 1])
     
+    answer = _adjust_to_logical_ending(answer)
+
+    return answer
+
+def _adjust_to_logical_ending(answer):
+    """
+    Ajusta el texto para que termine con un final lógico (ejemplo: oración completa).
+    """
+    # Signos comunes de finalización de oración
+    valid_endings = [".", "!", "…"]
+    
+    # Recortar hasta el último signo válido si existe
+    for ending in valid_endings:
+        if ending in answer:
+            answer = answer[:answer.rfind(ending)]
+            break
 
     return answer
 

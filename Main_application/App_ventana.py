@@ -1,6 +1,7 @@
 from tkinter import ttk
 from tkinter import *
 from tkinter import Text
+import matplotlib.dates as mdates
 
 import sys
 import os
@@ -10,7 +11,7 @@ load_dotenv()
 INITIAL_PATH = os.getenv("INITIAL_PATH")
 REPO_GYM_CUT = os.getenv("FOLDER_NAME")
 
-ruta_proyecto = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+Project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(os.path.join(str(INITIAL_PATH), str(REPO_GYM_CUT)))
 
 
@@ -46,13 +47,13 @@ def add_placeholder(entry, placeholder):
     entry.config(fg="#D3D3D3")  # Estilo visual para diferenciar el placeholder
 
     # Función que elimina el placeholder cuando el usuario hace clic
-    def on_focus_in():
+    def on_focus_in(event):
         if entry.get() == placeholder:
             entry.delete(0, END)
             entry.config(fg="black")  # Cambia el color al escribir texto
 
     # Función que restaura el placeholder si el usuario deja el campo vacío
-    def on_focus_out():
+    def on_focus_out(event):
         if entry.get() == "":
             entry.insert(0, placeholder)
             entry.config(fg="#D3D3D3")
@@ -61,7 +62,7 @@ def add_placeholder(entry, placeholder):
     entry.bind("<FocusIn>", on_focus_in)
     entry.bind("<FocusOut>", on_focus_out)
 
-class Pesos:
+class Weight:
 
     def __init__(self,root):
 
@@ -90,7 +91,7 @@ class Pesos:
         self.trv = ttk.Treeview(frame1, columns= (1,2,3,4,5,6,7,8,9,10,11), show='headings', height=10)
         self.trv.grid()
 
-        columnas = app.nombre_columnas()
+        columnas = app.columns_names()
         for numero, encabezado in enumerate(columnas):
             self.trv.heading(numero+1,text=list(encabezado))
             if len(encabezado[0]) > 18:
@@ -98,7 +99,7 @@ class Pesos:
             else:
                 anchura = 110
             self.trv.column(numero+1, width=anchura)
-        self.consulta()
+        self.query()
 
         self.text = Text(frame4, background="white", width=90, height=25)
         self.text.config(state="normal")
@@ -159,26 +160,26 @@ class Pesos:
         lbl12 = Label(frame2, width= 20)
         lbl12.grid(row=6, padx=8, pady=5)
 
-        btt1 = Button(frame2, text='Add',command=self.agregar, width=12, height=2)
+        btt1 = Button(frame2, text='Add',command=self.add_records, width=12, height=2)
         btt1.grid(row=0, column=4)
 
-        btt2 = Button(frame2, text='Filter', command=self.filtrar, width=12, height=2)
+        btt2 = Button(frame2, text='Filter', command=self.filtering, width=12, height=2)
         btt2.grid(row=0, column=5)
 
-        btt3 = Button(frame2, text='Update',command=self.actualizar, width=12, height=2)
+        btt3 = Button(frame2, text='Update',command=self.update_records, width=12, height=2)
         btt3.grid(row=1, column=4)
 
-        btt4 = Button(frame2, text='Delete',command=self.eliminar, width=12, height=2)
+        btt4 = Button(frame2, text='Delete',command=self.delete_records, width=12, height=2)
         btt4.grid(row=1, column=5)
 
-        btt5 = Button(master=frame3,text="Close",bg="red",command=self.cerrar, width=10, height=3, font=15)
+        btt5 = Button(master=frame3,text="Close",bg="red",command=self.close, width=10, height=3, font=15)
         btt5.pack(side=BOTTOM)
 
         self.drop_list = ttk.Combobox(frame3, values=["Cardio Calories", "Weight", "Total Calories Burnt"], state="readonly")
         self.drop_list.set("Select the measure to plot")
         self.drop_list.pack(side=TOP,expand=YES, fill="x")
 
-        btt6 = Button(master=frame3,text="Update Graphic",command=self.actualizar_grafico, width=12, height=2)
+        btt6 = Button(master=frame3,text="Update Graphic",command=self.update_plot, width=12, height=2)
         btt6.pack(side=TOP,expand=YES, fill="x")
 
 
@@ -189,31 +190,33 @@ class Pesos:
         btt9 = Button(master=frame4,text="Clean Console", command=self.clean_console, width=15, height=2)
         btt9.place(x=450, y=405)
 
-        self.graficar()
+        self.plotting()
 
     def get_selection(self):
         selection = self.drop_list.get()
         return selection
   
-    def graficar(self):
+    def plotting(self):
             
-        datos = lectura_filas()
-        num_regis = len(datos.copy())
-        lista_x = []
-        lista_y = []
+        data = read_records()
+        num_records = len(data.copy())
+        x_list = []
+        y_list = []
 
-        for index in range(num_regis):
-            y = datos[index][0]
-            x = datos[index][1] 
-            lista_y.append(y)
-            lista_x.append(x)
+        for index in range(num_records):
+            y = data[index][0]
+            x = data[index][1] 
+            y_list.append(y)
+            x_list.append(x)
         
-        lista_y.reverse()
-        lista_x.reverse()
+        y_list.reverse()
+        x_list.reverse()
 
         fig, ax = plt.subplots()
-        ax.plot(lista_y, lista_x, marker='o')
+        ax.plot(y_list, x_list, marker='o')
         ax.set_title(f"Weight Evolution by Date")
+        custom_ticks = y_list[::4]  # Cada 4 días
+        ax.set_xticks(custom_ticks)
         ax.set_xlabel("Date")
         ax.set_ylabel(f"Weight")           
 
@@ -227,7 +230,85 @@ class Pesos:
     def clean_console(self):
         self.text.delete("1.0", END)  
 
-    def actualizar_grafico(self):
+    def update_plot_aft_add(self):
+        self.canvas.get_tk_widget().destroy()
+        try: 
+            self.label_text.destroy()
+        except: 
+            pass
+        data = read_records()
+        num_records = len(data.copy())
+        x_list = []
+        y_list = []
+
+        for index in range(num_records):
+            y = data[index][0] 
+            x = data[index][1]
+
+            y_list.append(y)
+            x_list.append(x)
+        
+        y_list.reverse()
+        x_list.reverse()
+
+        fig, ax = plt.subplots()
+        ax.plot(y_list, x_list, marker='o')
+
+        ax.set_title(f"Weight Evolution by Date")
+        ax.set_title(f"Weight Evolution by Date")
+        custom_ticks = y_list[::4]  # Cada 4 días
+        ax.set_xticks(custom_ticks)
+        ax.set_xlabel("Date")
+        ax.set_ylabel(f"Weight")       
+
+        canvas = FigureCanvasTkAgg(fig, master=self.frame3)
+        canvas.draw()
+
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        self.canvas = canvas
+
+    def update_plot_aft_filter(self):
+        self.canvas.get_tk_widget().destroy()
+        try: 
+            self.label_text.destroy()
+        except: 
+            pass
+        data = filter_query_read(initial_date=self.ent1.get())
+        num_records = len(data.copy())
+        x_list = []
+        y_list = []
+
+        for index in range(num_records):
+            y = data[index][0] 
+            x = data[index][1]
+
+            y_list.append(y)
+            x_list.append(x)
+        
+        y_list.reverse()
+        x_list.reverse()
+
+        fig, ax = plt.subplots()
+        ax.plot(y_list, x_list, marker='o')
+
+        ax.set_title(f"Weight Evolution by Date")
+        ax.set_title(f"Weight Evolution by Date")
+        custom_ticks = y_list[::4]  # Cada 4 días
+        ax.set_xticks(custom_ticks)
+        ax.set_xlabel("Date")
+        ax.set_ylabel(f"Weight")       
+
+        canvas = FigureCanvasTkAgg(fig, master=self.frame3)
+        canvas.draw()
+
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        self.canvas = canvas
+
+
+
+    def update_plot(self):
         self.canvas.get_tk_widget().destroy()
         try: 
             self.label_text.destroy()
@@ -235,35 +316,38 @@ class Pesos:
             pass
         
 
-        datos = lectura_filas()
-        num_regis = len(datos.copy())
-        lista_x = []
-        lista_y = []
+        data = read_records()
+        num_records = len(data.copy())
+        x_list = []
+        y_list = []
 
-        for index in range(num_regis):
-            y = datos[index][0] 
+        for index in range(num_records):
+            y = data[index][0] 
             if self.get_selection().lower() == "weight":
-                x = datos[index][1]
+                x = data[index][1]
             elif self.get_selection().lower() == "cardio calories":
-                x = datos[index][9]
+                x = data[index][9]
             elif self.get_selection().lower() == "total calories burnt":
-                x = datos[index][10]
+                x = data[index][10]
             else: 
                 #Imprimir un texto por pantalla para que el usuario vea que no eligio la medida a graficar
                 text = "There was an error in the measure chosen, select other measure and update the graph" 
                 self.label_text = ttk.Label(self.frame3, text=text, font=25, justify="center")
                 self.label_text.pack()
                 return ""
-            lista_y.append(y)
-            lista_x.append(x)
+            y_list.append(y)
+            x_list.append(x)
         
-        lista_y.reverse()
-        lista_x.reverse()
+        y_list.reverse()
+        x_list.reverse()
 
         fig, ax = plt.subplots()
-        ax.plot(lista_y, lista_x, marker='o')
+        ax.plot(y_list, x_list, marker='o')
 
         ax.set_title(f"{self.drop_list.selection_get()} Evolution by Date")
+        ax.set_title(f"Weight Evolution by Date")
+        custom_ticks = y_list[::4]  # Cada 4 días
+        ax.set_xticks(custom_ticks)
         ax.set_xlabel("Date")
         ax.set_ylabel(f"{self.drop_list.selection_get().lower()}")       
 
@@ -294,94 +378,115 @@ class Pesos:
         self.text.insert(INSERT, chatbot_response)
 
 
-    def cerrar(self):
+    def close(self):
         root.quit()
         root.destroy()
 
 
-    def consulta(self):
+    def query(self):
         book = self.trv.get_children()
         for element in book:
             self.trv.delete(element)
         query = 'SELECT * FROM weight_control ORDER BY Date DESC'
-        rows = app.lanza_querys(query)
+        rows = app.throw_querys(query)
         for row in rows:
             self.trv.insert('', 0, text=row[1],values=row)
         return query
     
-    def chequeo(self):
+    def checked(self):
         return len(self.ent1.get()) != 0 and len(self.ent2.get()) != 0 and len(self.ent3.get()) != 0 and len(self.ent4.get()) != 0 and len(self.ent5.get()) != 0 and len(self.ent6.get()) != 0 
 
-    def filtrar(self):
-        if self.chequeo:
+    def filtering(self):
+        if self.checked:
             book = self.trv.get_children()
             for element in book:
                 self.trv.delete(element)
-            query = f'SELECT * FROM weight_control WHERE Date > "{self.ent1.get()}" ORDER BY Date DESC'
-            rows = app.lanza_querys(query)
+            query = f'SELECT * FROM weight_control WHERE Date >= "{self.ent1.get()}" ORDER BY Date DESC'
+            rows = app.throw_querys(query)
             for row in rows:
                 self.trv.insert('', 0, text=row[1],values=row)
-            self.ent1.delete(0,END)
+            #self.ent1.delete(0,END)
+            self.canvas.get_tk_widget().destroy()
+            try: 
+                self.label_text.destroy()
+            except: 
+                pass
+            self.update_plot_aft_filter()
         else: 
             print('The filter was not applied')
-            self.consulta()
+            self.query()
     
-    def agregar(self):
-            if self.chequeo:
+    def add_records(self):
+            if self.checked:
                 fecha = self.ent1.get()
                 try:
                     fecha = fecha.replace("/", "-")
                 except:
                     pass
-                if lectura_filas() == []:
+                if read_records() == []:
                     fecha_reg_anterior = "NULL"
                     peso = float(self.ent2.get()) 
                     peso_ayer = 0
                 else:
-                    fecha_reg_anterior = lectura_filas()[-1][0]
+                    fecha_reg_anterior = read_records()[0][0]
+                    
                     peso = float(self.ent2.get())
-                    peso_ayer = float(app.auxilia_consultas('Weight',fecha_reg_anterior)[0][0])
-                cardio = bool(self.ent4.get())
+                    
+                    peso_ayer = float(app.querys_helps('Weight',fecha_reg_anterior)[0][0])
+                    
+                cardio = self.ent4.get()
                 tiempo_entreno = int(self.ent3.get())
                 tiempo_cardio = int(self.ent5.get())
                 edad = int(self.ent6.get())
                 query = f"INSERT INTO weight_control VALUES('{fecha}',{peso},{peso_ayer},{round(0, 2)}, {round(peso-peso_ayer,2)}, {round(0,2)}, {round(peso/(self.estatura/100),2)}, {round((((self.MET_gym*3.5*peso)/200)*tiempo_entreno),2)}, {cardio}, {round(tiempo_cardio*((self.MET_cardio*3.5*peso)/200),2)},{round((((self.MET_gym*3.5*peso)/200)*tiempo_entreno)+(tiempo_cardio*((self.MET_cardio*3.5*peso)/200))+((10*peso)+(6.25*self.estatura)-(5*(edad)+5)),2)})"
-                app.lanza_querys(query)
+                app.throw_querys(query)
                 self.ent1.delete(0,END)
                 self.ent2.delete(0,END)
                 self.ent3.delete(0,END)
                 self.ent4.delete(0,END)
                 self.ent5.delete(0,END)
                 self.ent6.delete(0,END)
-                self.consulta()
+                self.query()
+                self.canvas.get_tk_widget().destroy()
+                try: 
+                    self.label_text.destroy()
+                except: 
+                    pass
+                self.update_plot_aft_add()
             else:
                 print('It was not saved')
-                self.consulta()
+                self.query()
 
-    def eliminar(self): #Me falta crear un error cuando el resgitro no este en tabla
+    def delete_records(self): #Me falta crear un error cuando el resgitro no este en tabla
         if len(self.ent1.get()) != 0:
             fecha_borrado = self.ent1.get()
             try:
                 query = f'DELETE FROM weight_control WHERE Date = "{fecha_borrado}"'
-                app.lanza_querys(query)
+                app.throw_querys(query)
             except ValueError as error:
                 print('This record it is not on the table')
             self.ent1.delete(0,END)
-            self.consulta()
+            self.query()
+            self.canvas.get_tk_widget().destroy()
+            try: 
+                self.label_text.destroy()
+            except: 
+                pass
+            self.update_plot_aft_add()
     
-    def actualizar(self):
+    def update_records(self):
         if len(self.ent1.get()) != 0 and (len(self.ent2.get()) != 0 or len(self.ent3.get()) != 0 or len(self.ent4.get()) != 0 or len(self.ent5.get()) != 0 or len(self.ent6.get()) != 0):
-            lista_nombre_columnas = app.nombre_columnas()
+            lista_nombre_columnas = app.columns_names()
             fecha_actualizar = self.ent1.get() 
-            peso_ayer = float(app.auxilia_consultas('Weight',fecha_actualizar)[0][0])
+            peso_ayer = float(app.querys_helps('Weight',fecha_actualizar)[0][0])
             query = f'UPDATE weight_control SET {lista_nombre_columnas[0]} = "{self.ent1.get()}",{lista_nombre_columnas[1]} = {self.ent2.get()},{lista_nombre_columnas[2]} = {peso_ayer},{lista_nombre_columnas[3]} = {round(0,2)},{lista_nombre_columnas[4]} = {round(float(self.ent2.get()) - peso_ayer,2)},{lista_nombre_columnas[5]} = {round(0,2)},{lista_nombre_columnas[6]} = {round(float(self.ent2.get())/(float(self.estatura)/100),2)},{lista_nombre_columnas[7]} = {round((((self.MET_gym*3.5*float(self.ent2.get()))/200)*float(self.ent3.get())),2)},{lista_nombre_columnas[8]} = {int(self.ent4.get())},{lista_nombre_columnas[9]} = {round(float(self.ent5.get())*((self.MET_cardio*3.5*float(self.ent2.get()))/200),2)},{lista_nombre_columnas[10]} = {round((((self.MET_gym*3.5*float(self.ent2.get()))/200)*float(self.ent3.get()))+(float(self.ent5.get())*((self.MET_cardio*3.5*float(self.ent2.get()))/200))+((10*float(self.ent2.get()))+(6.25*self.estatura)-(5*(float(self.ent6.get()))+5)),2)} WHERE Fecha = "{self.ent1.get()}"'
             query = query.replace("(","").replace(",)","")
 
             try:
-                app.lanza_querys(query)
+                app.throw_querys(query)
             except ValueError as error:
                 print('This record it is not on the table')
-                self.consulta()
+                self.query()
             
             self.ent1.delete(0,END)
             self.ent2.delete(0,END)
@@ -389,16 +494,22 @@ class Pesos:
             self.ent4.delete(0,END)
             self.ent5.delete(0,END)
             self.ent6.delete(0,END)
-            self.consulta()
+            self.query()
+            self.canvas.get_tk_widget().destroy()
+            try: 
+                self.label_text.destroy()
+            except: 
+                pass
+            self.update_plot_aft_add()
 
 
 if __name__ == '__main__':
     if os.path.exists(TABLE) == False:
-        creacion_tabla()
+        create_table()
         print(f"The datatable was created on this path in you FileSystem --> {os.getcwd()}")
 
     root = Tk()
-    pesos = Pesos(root)
+    pesos = Weight(root)
 
     root.mainloop()
     
